@@ -127,7 +127,11 @@ _.mixin
   batchIf: (exprs, options={}) ->
     {args, context} = options
     _(exprs).chain()
-      .map((expr) -> _(context).result expr, args)
+      .map (expr) ->
+        if _(expr).isFunction()
+          expr.apply(context, args)
+        else
+          expr
       .every((result) -> !!result)
       .value()
 
