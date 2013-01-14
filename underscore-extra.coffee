@@ -1,4 +1,3 @@
-result = _.result
 entryMap =
   escape:
     '&': '&amp;'
@@ -17,7 +16,7 @@ _.mixin
     _elem = _ elem
     _obj = _ _(obj).result()
     if $.isPlainObject obj
-      `elem in obj`
+      obj[elem]?
     else if _obj.isArray() or _obj.isString()
       !!~_obj.indexOf elem
     else
@@ -38,20 +37,18 @@ _.mixin
     ('' + string).replace ///[#{keys.join ''}]///g, (match) ->
       entryMap.unescape[match]
 
-  result: (object, property) ->
-    return result.apply _, arguments if object? and property?
-    if _(object).isFunction() then object() else object
-
   sum: (array) ->
     _array = _ array
     return unless _array.isArray()
     _array.reduce (result, number) ->
       result + number
 
-  hasProp: (obj, attrList, any) ->
-    _(attrList).chain().map((attr) ->
-      _(obj).has(attr) and obj[attr]?
-    )[`any? "any": "all"`](_.identity).value()
+  hasProp: (obj, attrList, some) ->
+    _(attrList).chain()
+      .map (attr) ->
+        _(obj).has(attr) and obj[attr]?
+      .resultWithArgs((if some then "some" else "every"), [_.identity])
+      .value()
 
   arrayDel: (array, obj) ->
     index = _(array).indexOf obj
@@ -77,11 +74,79 @@ _.mixin
       elem? and elem.length
     .value()
 
+  swap: (obj, propertys) ->
+    obj = _.clone obj
+    [first, last] = propertys
+    [obj[first], obj[last]] = [obj[last], obj[first]]
+    obj
+
+  ###
+    handlerMap = {
+      "true": function() {
+        alert("a")
+        return "b"
+      },
+      "b": "b"
+    }
+
+    obj = {
+      "b": function(m) {
+        console.log(m)
+        return "c"
+      },
+      "c": 3
+    }
+
+    _([1, 0]).chain()
+      .every()
+      .disjunctor(handlerMap) // alert "a"
+      .disjunctor(handlerMap, {context: obj, args: ["b"]}) // console "b"
+      .disjunctor(handlerMap, {context: obj})
+      .value() // => 3
+  ###
+  disjunctor: (signal, handlerMap, options={}) ->
+    return unless handler = handlerMap[signal]
+    {context, args} = options
+    _(context).result handler, args
+
+  ###
+    _(obj).chain()
+      .batch("isFunction", "isString") // [true, false]
+      .some()
+  ###
+  batch: (obj, methods...) ->
+    return obj if _(methods).isEmpty()
+    _(methods).map (method) -> _(obj).result method
+
+  ###
+    _.batchIf([
+      function (name, value) { return this[name] == null },
+      function (name, value) { return this[name] === value }
+    ], {args: ["a", 1], context: {a: 2}}) // => false
+  ###
+  batchIf: (exprs, options={}) ->
+    {args, context} = options
+    _(exprs).chain()
+      .map((expr) -> _(context).result expr, args)
+      .every((result) -> !!result)
+      .value()
+
+  property: _.result
+
   resultWithArgs: (obj, property, args, context) ->
     return unless obj?
-    value = obj[property]
-    context or= obj
-    if _.isFunction value
-      value.apply context, args
+    value = if property? and obj[property]? then obj[property] else obj
+    context ?= obj if property?
+    return value unless _.isFunction value
+    value.apply context, args
+
+  result: (object, property, args, context) ->
+    return unless arguments.length
+    if arguments.length is 1
+      if _(object).isFunction() then object() else object
+    if arguments.length is 2
+      _.property object, property
+    else if _(property).isFunction()
+      property.apply (context or object), args
     else
-      value
+      _.resultWithArgs object, property, args, context
