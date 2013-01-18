@@ -137,9 +137,15 @@ _.mixin
 
   property: _.result
 
+  ###
+    get obj result
+      _.resultWithArgs obj, undefined, [args...], context
+    get obj[fn] result
+      _.resultWithArgs obj, fn, [args...], context
+  ###
   resultWithArgs: (obj, property, args, context) ->
     return unless obj?
-    value = if property? and obj[property]? then obj[property] else obj
+    value = if property? then obj[property] else obj
     context ?= obj if property?
     return value unless _.isFunction value
     value.apply context, args
