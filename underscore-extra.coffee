@@ -58,10 +58,10 @@ _.mixin
     _array.reduce (result, number) ->
       result + number
 
-  arrayDel: (array, obj) ->
+  arrayDel: (array, obj, destructive) ->
     index = _(array).indexOf obj
     return if !~index
-    newArray = _.clone array
+    newArray = if destructive then array else _.clone array
     newArray.splice index, 1
     newArray
   # ]]]
