@@ -24,6 +24,16 @@ _.mixin
     else
       false
 
+  pack: (obj) ->
+    return obj unless _(obj).isObject()
+    return obj unless _(obj).every (value) -> _(value).isArray()
+    result = []
+    _(obj).forEach (vals, key) ->
+      _(vals).forEach (value, index) ->
+        result[index] or= if _(obj).isArray() then [] else {}
+        result[index][key] = value
+    result
+
   deleteWhere: (coll, filter) ->
     if _(filter).isArray()
       _(filter).forEach (f) ->
