@@ -8,8 +8,45 @@ entryMap =
     '/': '&#x2F;'
 
 entryMap.unescape = _.invert entryMap.escape
+difference = _.difference
 
 _.mixin
+  # patch [[[
+  difference: (array, others..., deep) ->
+    if not deep or _(deep).isArray()
+      return difference.apply _, [array].concat(others).concat [deep]
+    rest = _(others).flatten true
+    _.filter array, (value) ->
+      not _(rest).some (part) -> _(part).isEqual value
+
+  escape: (string, ignoreChar=[]) ->
+    return '' unless string?
+    keys = _(entryMap.escape).keys()
+    _(ignoreChar).each (char) -> keys = _(keys).arrayDel char
+    ('' + string).replace ///[#{keys.join ''}]///g, (match) ->
+      entryMap.escape[match]
+
+  unescape: (string, ignoreChar=[]) ->
+    return '' unless string?
+    keys = _(entryMap.escape).keys()
+    _(ignoreChar).each (char) -> keys = _(keys).arrayDel entryMap.escape[char]
+    ('' + string).replace ///[#{keys.join ''}]///g, (match) ->
+      entryMap.unescape[match]
+
+  property: _.result
+
+  result: (object, property, args, context) ->
+    return unless arguments.length
+    if arguments.length is 1
+      if _(object).isFunction() then object() else object
+    if arguments.length is 2
+      _.property object, property
+    else if _(property).isFunction()
+      property.apply (context or object), args
+    else
+      _.resultWithArgs object, property, args, context
+
+  # ]]]
 
   # collection [[[
   in: (elem, obj) ->
@@ -94,20 +131,6 @@ _.mixin
   # ]]]
 
   # utils [[[
-  escape: (string, ignoreChar=[]) ->
-    return '' unless string?
-    keys = _(entryMap.escape).keys()
-    _(ignoreChar).each (char) -> keys = _(keys).arrayDel char
-    ('' + string).replace ///[#{keys.join ''}]///g, (match) ->
-      entryMap.escape[match]
-
-  unescape: (string, ignoreChar=[]) ->
-    return '' unless string?
-    keys = _(entryMap.escape).keys()
-    _(ignoreChar).each (char) -> keys = _(keys).arrayDel entryMap.escape[char]
-    ('' + string).replace ///[#{keys.join ''}]///g, (match) ->
-      entryMap.unescape[match]
-
   ###
     _(obj).chain()
       .batch("isFunction", "isString") // [true, false]
@@ -163,8 +186,6 @@ _.mixin
     {context, args} = options
     _(context).result handler, args
 
-  property: _.result
-
   ###
     get obj result
       _.resultWithArgs obj, undefined, [args...], context
@@ -177,15 +198,4 @@ _.mixin
     context ?= obj if property?
     return value unless _.isFunction value
     value.apply context, args
-
-  result: (object, property, args, context) ->
-    return unless arguments.length
-    if arguments.length is 1
-      if _(object).isFunction() then object() else object
-    if arguments.length is 2
-      _.property object, property
-    else if _(property).isFunction()
-      property.apply (context or object), args
-    else
-      _.resultWithArgs object, property, args, context
   # ]]]
