@@ -71,13 +71,13 @@ _.mixin
         result[index][key] = value
     result
 
-  deleteWhere: (coll, filter) ->
+  deleteWhere: (coll, filter, destructive) ->
     if _(filter).isArray()
       _(filter).forEach (f) ->
-        coll = _(coll).deleteWhere f
+        coll = _(coll).deleteWhere f, destructive
     else
       _(coll).chain().where(filter).forEach (atom) ->
-        coll = _(coll).arrayDel atom
+        coll = _(coll).arrayDel atom, destructive
     coll
 
   split: (obj, spliter) ->
