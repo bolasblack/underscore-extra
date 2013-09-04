@@ -114,7 +114,11 @@ _.mixin
   # ]]]
 
   # object [[[
-  isDigit: (obj) -> /^\d+$/.test obj.toString()
+  isDigit: (obj) ->
+    return unless obj
+    obj = obj.toString()
+    obj = obj.slice(1) if obj.charAt(0) is '-'
+    /^\d+$/.test obj
 
   hasProp: (obj, attrList, some) ->
     _(attrList).chain()
@@ -199,3 +203,4 @@ _.mixin
     return value unless _.isFunction value
     value.apply context, args
   # ]]]
+
