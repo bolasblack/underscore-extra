@@ -71,13 +71,7 @@ _.mixin
     result
 
   deleteWhere: (coll, filter, destructive) ->
-    if _.isArray filter
-      _.forEach filter, (f) ->
-        coll = _.deleteWhere coll, f, destructive
-    else
-      _(coll).chain().where(filter).forEach (atom) ->
-        coll = _.arrayDel coll, atom, destructive
-    coll
+    _.arrayDel coll, filter, {destructive, findByAttrs: true}
 
   split: (obj, spliter) ->
     return obj.split(spliter) if _.isString obj
@@ -104,11 +98,17 @@ _.mixin
     _array.reduce (result, number) ->
       result + number
 
-  arrayDel: (array, obj, destructive) ->
-    index = _.indexOf array, obj
-    return if !~index
-    newArray = if destructive then array else _.clone array
-    newArray.splice index, 1
+  # option = {
+  #   destructive: '是否直接作用在array上，默认为false',
+  #   findByAttrs: '是否调用findIndex来获取元素的index，默认为false'
+  # }
+  arrayDel: (array, elem, option = {}) ->
+    return array unless _.isArray array
+    option = destructive: option if _.isBoolean option
+    elemIndex = _[if option.findByAttrs then 'findIndex' else 'indexOf'] array, elem
+    return array if elemIndex is -1
+    newArray = if option.destructive then array else array.slice()
+    newArray.splice elemIndex, 1
     newArray
   # ]]]
 
