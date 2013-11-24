@@ -13,23 +13,23 @@ difference = _.difference
 _.mixin
   # patch [[[
   difference: (array, others..., deep) ->
-    if not deep or _(deep).isArray()
+    if not deep or _.isArray deep
       return difference.apply _, [array].concat(others).concat [deep]
-    rest = _(others).flatten true
+    rest = _.flatten others, true
     _.filter array, (value) ->
-      not _(rest).some (part) -> _(part).isEqual value
+      not _.some rest, (part) -> _.isEqual part, value
 
   escape: (string, ignoreChar=[]) ->
     return '' unless string?
-    keys = _(entryMap.escape).keys()
-    _(ignoreChar).each (char) -> keys = _(keys).arrayDel char
+    keys = _.keys entryMap.escape
+    _.each ignoreChar, (char) -> _.arrayDel keys, char, true
     ('' + string).replace ///[#{keys.join ''}]///g, (match) ->
       entryMap.escape[match]
 
   unescape: (string, ignoreChar=[]) ->
     return '' unless string?
-    keys = _(entryMap.escape).keys()
-    _(ignoreChar).each (char) -> keys = _(keys).arrayDel entryMap.escape[char]
+    keys = _.keys entryMap.escape
+    _.each ignoreChar, (char) -> _.arrayDel keys, entryMap.escape[char], true
     ('' + string).replace ///[#{keys.join ''}]///g, (match) ->
       entryMap.unescape[match]
 
@@ -38,10 +38,10 @@ _.mixin
   result: (object, property, args, context) ->
     return unless arguments.length
     if arguments.length is 1
-      if _(object).isFunction() then object() else object
+      if _.isFunction(object) then object() else object
     if arguments.length is 2
       _.property object, property
-    else if _(property).isFunction()
+    else if _.isFunction property
       property.apply (context or object), args
     else
       _.resultWithArgs object, property, args, context
@@ -52,42 +52,41 @@ _.mixin
   in: (elem, obj) ->
     return false unless elem?
     return false unless obj?
-    _elem = _ elem
-    _obj = _ _(obj).result()
+    obj = _.result obj
     if $.isPlainObject obj
       obj[elem]?
-    else if _obj.isArray() or _obj.isString()
-      !!~_obj.indexOf elem
+    else if _.isArray(obj) or _.isString(obj)
+      !!~_.indexOf obj, elem
     else
       false
 
   pack: (obj) ->
-    return obj unless _(obj).isObject()
-    return obj unless _(obj).every (value) -> _(value).isArray()
+    return obj unless _.isObject obj
+    return obj unless _.every obj, (value) -> _.isArray value
     result = []
-    _(obj).forEach (vals, key) ->
-      _(vals).forEach (value, index) ->
-        result[index] or= if _(obj).isArray() then [] else {}
+    _.forEach obj, (vals, key) ->
+      _.forEach vals, (value, index) ->
+        result[index] or= if _.isArray(obj) then [] else {}
         result[index][key] = value
     result
 
   deleteWhere: (coll, filter, destructive) ->
-    if _(filter).isArray()
-      _(filter).forEach (f) ->
-        coll = _(coll).deleteWhere f, destructive
+    if _.isArray filter
+      _.forEach filter, (f) ->
+        coll = _.deleteWhere coll, f, destructive
     else
       _(coll).chain().where(filter).forEach (atom) ->
-        coll = _(coll).arrayDel atom, destructive
+        coll = _.arrayDel coll, atom, destructive
     coll
 
   split: (obj, spliter) ->
     return obj.split(spliter) if _.isString obj
     return [] unless _.isArray obj
     memo = []
-    cloneThis = _(obj).clone()
+    cloneThis = _.clone obj
     cloneThis.push spliter
     _(cloneThis).chain().map (elem) ->
-      if _(elem).isEqual spliter
+      if _.isEqual elem, spliter
         [clone, memo] = [memo, []]
         return clone
       else
@@ -106,7 +105,7 @@ _.mixin
       result + number
 
   arrayDel: (array, obj, destructive) ->
-    index = _(array).indexOf obj
+    index = _.indexOf array, obj
     return if !~index
     newArray = if destructive then array else _.clone array
     newArray.splice index, 1
@@ -120,10 +119,9 @@ _.mixin
     obj = obj.slice(1) if obj.charAt(0) is '-'
     /^\d+$/.test obj
 
-  hasProp: (obj, attrList, some) ->
-    _(attrList).chain()
-      .map (attr) ->
-        _(obj).has(attr) and obj[attr]?
+  hasProp: (obj, props, some) ->
+    _(props).chain()
+      .map(_.partial _.has, obj)
       .resultWithArgs((if some then "some" else "every"), [_.identity])
       .value()
 
@@ -141,8 +139,8 @@ _.mixin
       .some()
   ###
   batch: (obj, methods...) ->
-    return obj if _(methods).isEmpty()
-    _(methods).map (method) -> _(obj).result method
+    return obj if _.isEmpty methods
+    _.map methods, (method) -> _.result obj, method
 
   ###
     _.batchIf([
@@ -154,7 +152,7 @@ _.mixin
     {args, context} = options
     _(exprs).chain()
       .map (expr) ->
-        if _(expr).isFunction()
+        if _.isFunction expr
           expr.apply(context, args)
         else
           expr
@@ -188,13 +186,13 @@ _.mixin
   disjunctor: (signal, handlerMap, options={}) ->
     return unless handler = handlerMap[signal]
     {context, args} = options
-    _(context).result handler, args
+    _.result context, handler, args
 
   ###
     get obj result
-      _.resultWithArgs obj, undefined, [args...], context
-    get obj[fn] result
-      _.resultWithArgs obj, fn, [args...], context
+      _.resultWithArgs obj, (false || '' || null || undefined), [args...], context
+    get obj.fn or obj.fn(args...) result
+      _.resultWithArgs obj, 'fn', [args...], context
   ###
   resultWithArgs: (obj, property, args, context) ->
     return unless obj?
