@@ -11,6 +11,16 @@ entryMap.unescape = _.invert entryMap.escape
 difference = _.difference
 
 _.mixin
+  mixPatch: (map) ->
+    _(map).chain()
+      .keys()
+      .filter (key) ->
+        key not in _.keys _
+      .map (key) ->
+        _.mixin _(map).pick key
+        key
+      .value()
+
   # patch [[[
   difference: (array, others..., deep) ->
     if not deep or _.isArray deep
@@ -93,10 +103,19 @@ _.mixin
 
   # array [[[
   sum: (array) ->
-    _array = _ array
-    return unless _array.isArray()
-    _array.reduce (result, number) ->
+    return unless _.isArray array
+    _.reduce array, (result, number) ->
       result + number
+
+  walk: (array, property, callback, thisArg) ->
+    return unless _.isArray array
+    return unless property
+
+    callback ?= _.identity
+
+    _.forEach array, (elem) ->
+      callback.call thisArg, elem, array
+      _.walk elem[property], property, callback, thisArg
 
   # option = {
   #   destructive: '是否直接作用在array上，默认为false',
@@ -201,4 +220,18 @@ _.mixin
     return value unless _.isFunction value
     value.apply context, args
   # ]]]
+
+_.mixPatch
+  findIndex: (array, callback, thisArg) ->
+    return -1 unless _.isArray array
+    callback ?= _.identity
+
+    if _.isFunction callback
+      _.forEach array, (elem, index) ->
+        return index if callback.call thisArg, elem
+      -1
+    else if _.isObject callback
+      _.indexOf array, _.findWhere array, callback
+    else
+      _.pluck array, callback
 
