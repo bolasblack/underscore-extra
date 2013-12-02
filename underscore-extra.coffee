@@ -215,7 +215,11 @@ _.mixin
     obj = obj.slice(1) if obj.charAt(0) is '-'
     /^\d+$/.test obj
 
-  hasProp: (obj, props, some) ->
+  hasProp: ->
+    console.log "The function _.hasProp has been deprecated in favor of a newly name 'hasProps.'"
+    _.hasProps arguments...
+
+  hasProps: (obj, props, some) ->
     _(props).chain()
       .map(_.partial _.has, obj)
       .resultWithArgs((if some then "some" else "every"), _.identity)
