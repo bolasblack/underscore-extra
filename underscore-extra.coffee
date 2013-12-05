@@ -1,3 +1,4 @@
+
 entryMap =
   escape:
     '&': '&amp;'
@@ -9,6 +10,7 @@ entryMap =
 
 entryMap.unescape = _.invert entryMap.escape
 difference = _.difference
+debounce = _.debounce
 
 # chainable
 _.mixin
@@ -191,6 +193,18 @@ _.mixin
     newArray = if option.destructive then array else array.slice()
     newArray.splice elemIndex, 1
     newArray
+  # ]]]
+
+  # function [[[
+  debounce: (handler, wait, options) ->
+    func = debounce.apply _, arguments
+    return func unless func
+    return func unless _(options).isObject()
+    return func unless options.memo
+    args = null
+    ->
+      args = arguments unless args
+      func.apply this, args
   # ]]]
 
 # unchainable
