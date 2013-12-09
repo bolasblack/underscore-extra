@@ -200,11 +200,9 @@ _.mixin
     func = debounce.apply _, arguments
     return func unless func
     return func unless _(options).isObject()
-    return func unless options.memo
-    args = null
-    ->
-      args = arguments unless args
-      func.apply this, args
+    return func unless _(options.argsProcesser).isFunction()
+    (args...) -> func.apply this, options.argsProcesser args
+
   # ]]]
 
 # unchainable
