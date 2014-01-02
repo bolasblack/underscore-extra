@@ -188,10 +188,13 @@ _.mixin
   arrayDel: (array, elem, option = {}) ->
     return array unless _.isArray array
     option = destructive: option if _.isBoolean option
-    elemIndex = _[if option.findByAttrs then 'findIndex' else 'indexOf'] array, elem
-    return array if elemIndex is -1
-    newArray = if option.destructive then array else array.slice()
-    newArray.splice elemIndex, 1
+    elems = if option.findByAttrs then _.where(array, elem) else [elem]
+    newArray = array
+    _.each elems, (elem) ->
+      elemIndex = _.indexOf newArray, elem
+      return if elemIndex is -1
+      newArray = if option.destructive then newArray else newArray.slice()
+      newArray.splice elemIndex, 1
     newArray
   # ]]]
 
