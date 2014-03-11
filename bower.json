@@ -1,0 +1,17 @@
+{
+  "name": "underscore-extra",
+  "version": "0.0.1",
+  "homepage": "https://github.com/sorcerers/underscore-extra",
+  "authors": [
+    "bolasblack <bolasblack@gmail.com>"
+  ],
+  "main": "src/underscore-extra.coffee",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
