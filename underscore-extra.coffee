@@ -23,6 +23,7 @@ _.mixin
     else
       false
 
+  isDigit: (obj) -> /^\d+$/.test obj.toString()
   escape: (string, ignoreChar=[]) ->
     return '' unless string?
     keys = _(entryMap.escape).keys()
