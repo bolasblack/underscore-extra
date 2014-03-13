@@ -8,6 +8,7 @@ entryMap =
     "'": '&#x27;'
     '/': '&#x2F;'
 
+originalResult = _.result
 entryMap.unescape = _.invert entryMap.escape
 difference = _.difference
 debounce = _.debounce
@@ -85,20 +86,6 @@ _.mixin
     return unless handler = handlerMap[signal]
     {context, args} = options
     _.result context, handler, args
-
-  ###
-    get obj result
-      _.resultWithArgs obj, (false || '' || null || undefined), [args...], context
-    get obj.fn or obj.fn(args...) result
-      _.resultWithArgs obj, 'fn', [args...], context
-  ###
-  resultWithArgs: (obj, property, args, context) ->
-    return unless obj?
-    value = if property? then obj[property] else obj
-    context = obj unless context?
-    args = [args] unless _.isArray args
-    return value unless _.isFunction value
-    value.apply context, args
   # ]]]
 
   # patch [[[
@@ -122,19 +109,6 @@ _.mixin
     _.each ignoreChar, (char) -> _.arrayDel keys, entryMap.escape[char], true
     ('' + string).replace ///[#{keys.join ''}]///g, (match) ->
       entryMap.unescape[match]
-
-  property: _.result
-
-  result: (object, property, args, context) ->
-    return unless arguments.length
-    if arguments.length is 1
-      if _.isFunction(object) then object() else object
-    if arguments.length is 2
-      _.property object, property
-    else if _.isFunction property
-      property.apply (context or object), args
-    else
-      _.resultWithArgs object, property, args, context
 
   # ]]]
 
@@ -210,6 +184,34 @@ _.mixin
 
 # unchainable
 _.mixin
+  # utils # [[[
+
+  ###
+    get obj result
+      _.resultWithArgs obj, (false || '' || null || undefined), [args...], context
+    get obj.fn or obj.fn(args...) result
+      _.resultWithArgs obj, 'fn', [args...], context
+  ###
+  resultWithArgs: (obj, property, args, context) ->
+    return unless obj?
+    value = if property? then obj[property] else obj
+    context = obj unless context?
+    args = [args] unless _.isArray args
+    return value unless _.isFunction value
+    value.apply context, args
+
+  result: (object, property, args, context) ->
+    return unless arguments.length
+    if arguments.length is 1
+      if _.isFunction(object) then object() else object
+    if arguments.length is 2
+      originalResult object, property
+    else if _.isFunction property
+      property.apply (context or object), args
+    else
+      _.resultWithArgs object, property, args, context
+  # ]]]
+
   # collection [[[
   in: (elem, obj) ->
     return false unless elem?
