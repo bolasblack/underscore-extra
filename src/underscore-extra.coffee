@@ -8,6 +8,7 @@ entryMap =
     "'": '&#x27;'
     '/': '&#x2F;'
 
+originalRemove = _.remove
 originalResult = _.result
 entryMap.unescape = _.invert entryMap.escape
 difference = _.difference
@@ -86,6 +87,10 @@ _.mixin
     return unless handler = handlerMap[signal]
     {context, args} = options
     _.result context, handler, args
+
+  equalChecker: (obj, deepEqual) ->
+    simpleEqual = (a, b) -> a is b
+    _.partial (if deepEqual then _.isEqual else simpleEqual), obj
   # ]]]
 
   # patch [[[
@@ -123,9 +128,6 @@ _.mixin
         result[index][key] = value
     result
 
-  deleteWhere: (coll, filter, destructive) ->
-    _.arrayDel coll, filter, {destructive, findByAttrs: true}
-
   split: (obj, spliter) ->
     return obj.split(spliter) if _.isString obj
     return [] unless _.isArray obj
@@ -155,21 +157,32 @@ _.mixin
       callback.call thisArg, elem, array
       _.walk elem[property], property, callback, thisArg
 
+  destRemove: originalRemove
+
   # option = {
   #   destructive: '是否直接作用在array上，默认为false',
-  #   findByAttrs: '是否调用findIndex来获取元素的index，默认为false'
   # }
-  arrayDel: (array, elem, option = {}) ->
-    return array unless _.isArray array
-    option = destructive: option if _.isBoolean option
-    elems = if option.findByAttrs then _.where(array, elem) else [elem]
+  remove: (array, filter = _.identity, option = {}, thisArg) ->
+    return array unless _(array).isArray()
+    option = destructive: option if _(option).isBoolean()
+    if _(filter).isObject() or _(filter).isFunction()
+      targetElems = _.filter array, filter, thisArg
+    else
+      targetElems = [filter]
+
     newArray = array
-    _.each elems, (elem) ->
-      elemIndex = _.indexOf newArray, elem
-      return if elemIndex is -1
-      newArray = if option.destructive then newArray else newArray.slice()
-      newArray.splice elemIndex, 1
+    _.each targetElems, (elem) ->
+      newArray = newArray.slice() unless option.destructive
+      originalRemove.call _, newArray, _.equalChecker(elem)
     newArray
+
+  deleteWhere: (coll, filter, destructive) ->
+    console.warn "The function _.deleteWhere has been deprecated, use _.remove instead."
+    _.remove coll, filter, {destructive, findByAttrs: true}
+
+  arrayDel: ->
+    console.warn "The function _.arrayDel has been deprecated, use _.remove instead."
+    _.remove arguments...
   # ]]]
 
   # function [[[
@@ -233,7 +246,7 @@ _.mixin
     /^\d+$/.test obj
 
   hasProp: ->
-    console.log "The function _.hasProp has been deprecated in favor of a newly name 'hasProps.'"
+    console.warn "The function _.hasProp has been deprecated in favor of a newly name 'hasProps.'"
     _.hasProps arguments...
 
   hasProps: (obj, props, some) ->
