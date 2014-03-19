@@ -240,7 +240,7 @@ _.mixin
 
   # object [[[
   isDigit: (obj) ->
-    return unless obj
+    return false unless obj
     obj = obj.toString()
     obj = obj.slice(1) if obj.charAt(0) is '-'
     /^\d+$/.test obj
