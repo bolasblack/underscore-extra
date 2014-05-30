@@ -11,8 +11,8 @@ entryMap =
 originalRemove = _.remove
 originalResult = _.result
 entryMap.unescape = _.invert entryMap.escape
-difference = _.difference
-debounce = _.debounce
+originalDifference = _.difference
+originalDebounce = _.debounce
 
 # chainable
 _.mixin
@@ -96,7 +96,7 @@ _.mixin
   # patch [[[
   difference: (array, others..., deep) ->
     if not deep or _.isArray deep
-      return difference.apply _, [array].concat(others).concat [deep]
+      return originalDifference.apply _, [array].concat(others).concat [deep]
     rest = _.flatten others, true
     _.filter array, (value) ->
       not _.some rest, (part) -> _.isEqual part, value
@@ -187,7 +187,7 @@ _.mixin
 
   # function [[[
   debounce: (handler, wait, options) ->
-    func = debounce.apply _, arguments
+    func = originalDebounce.apply _, arguments
     return func unless func
     return func unless _(options).isObject()
     return func unless _(options.argsProcesser).isFunction()
