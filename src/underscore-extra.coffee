@@ -52,7 +52,7 @@ _.mixin
       function (name, value) { return this[name] === value }
     ], {args: ["a", 1], context: {a: 2}}) // => false
   ###
-  batchIf: (exprs, options={}) ->
+  batchIf: (exprs, options = {}) ->
     {args, context} = options
     _(exprs).chain()
       .map (expr) ->
@@ -87,7 +87,7 @@ _.mixin
       .disjunctor(handlerMap, {context: obj})
       .value() // => 3
   ###
-  disjunctor: (signal, handlerMap, options={}) ->
+  disjunctor: (signal, handlerMap, options = {}) ->
     return unless handler = handlerMap[signal]
     {context, args} = options
     _.result context, handler, args
