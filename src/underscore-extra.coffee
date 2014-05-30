@@ -1,16 +1,20 @@
 
-entryMap =
-  escape:
-    '&': '&amp;'
-    '<': '&lt;'
-    '>': '&gt;'
-    '"': '&quot;'
-    "'": '&#x27;'
-    '/': '&#x2F;'
+# from https://github.com/lodash/lodash/blob/master/lodash.js#L202
+htmlEscapes =
+  '&': '&amp;'
+  '<': '&lt;'
+  '>': '&gt;'
+  '"': '&quot;'
+  "'": '&#39;'
+  '`': '&#96;'
+
+entryMap = {
+  escape: htmlEscapes
+  unescape: _.invert htmlEscapes
+}
 
 originalRemove = _.remove
 originalResult = _.result
-entryMap.unescape = _.invert entryMap.escape
 originalDifference = _.difference
 originalDebounce = _.debounce
 
@@ -101,19 +105,17 @@ _.mixin
     _.filter array, (value) ->
       not _.some rest, (part) -> _.isEqual part, value
 
-  escape: (string, ignoreChar=[]) ->
+  escape: (string, ignoreChar = []) ->
     return '' unless string?
-    keys = _.keys entryMap.escape
-    _.each ignoreChar, (char) -> _.arrayDel keys, char, true
-    ('' + string).replace ///[#{keys.join ''}]///g, (match) ->
+    keys = _(entryMap.escape).chain().keys().reject((key) -> key in ignoreChar).value()
+    String(string).replace ///[#{keys.join ''}]///g, (match) ->
       entryMap.escape[match]
 
-  unescape: (string, ignoreChar=[]) ->
+  unescape: (string, ignoreChar = []) ->
     return '' unless string?
-    keys = _.keys entryMap.escape
-    _.each ignoreChar, (char) -> _.arrayDel keys, entryMap.escape[char], true
-    ('' + string).replace ///[#{keys.join ''}]///g, (match) ->
-      entryMap.unescape[match]
+    String(string).replace ///(#{_.keys(entryMap.unescape).join '|'})///g, (match) ->
+      key = entryMap.unescape[match]
+      if key in ignoreChar then match else key
 
   # ]]]
 
