@@ -1,4 +1,21 @@
 # underscore-extra
 
-Add some useful method (like `arrayDel`, `split`, `in`) for `underscore.js` and `lodash.js`.
+Add/Strengthen some useful method (like `remove`, `split`, `in`) for `underscore.js` or `lodash.js`.
+
+## Usage
+
+In browsers:
+
+```html
+<script src="path/to/underscore.js" />
+<script src="path/to/underscore-extra.js" />
+```
+
+In node:
+
+```javascript
+var _ = require('lodash')
+
+require('underscore-extra')(_)
+```
 
