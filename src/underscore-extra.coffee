@@ -159,33 +159,6 @@ mixer = (_) ->
       _.forEach array, (elem) ->
         callback.call thisArg, elem, array
         _.walk elem[property], property, callback, thisArg
-
-    destRemove: originalRemove
-
-    # option = {
-    #   destructive: '是否直接作用在array上，默认为false',
-    # }
-    remove: (array, filter = _.identity, option = {}, thisArg) ->
-      return array unless _(array).isArray()
-      option = destructive: option if _(option).isBoolean()
-      if _(filter).isObject() or _(filter).isFunction()
-        targetElems = _.filter array, filter, thisArg
-      else
-        targetElems = [filter]
-
-      newArray = array
-      _.each targetElems, (elem) ->
-        newArray = newArray.slice() unless option.destructive
-        originalRemove.call _, newArray, _.equalChecker(elem)
-      newArray
-
-    deleteWhere: (coll, filter, destructive) ->
-      console.warn "The function _.deleteWhere has been deprecated, use _.remove instead."
-      _.remove coll, filter, {destructive, findByAttrs: true}
-
-    arrayDel: ->
-      console.warn "The function _.arrayDel has been deprecated, use _.remove instead."
-      _.remove arguments...
     # ]]]
 
     # function [[[
@@ -264,6 +237,33 @@ mixer = (_) ->
       return unless _.isArray array
       _.reduce array, (result, number) ->
         result + number
+
+    destRemove: originalRemove
+
+    # option = {
+    #   destructive: '是否直接作用在array上，默认为false',
+    # }
+    remove: (array, filter = _.identity, option = {}, thisArg) ->
+      return array unless _(array).isArray()
+      option = destructive: option if _(option).isBoolean()
+      if _(filter).isObject() or _(filter).isFunction()
+        targetElems = _.filter array, filter, thisArg
+      else
+        targetElems = [filter]
+
+      newArray = array
+      _.each targetElems, (elem) ->
+        newArray = newArray.slice() unless option.destructive
+        originalRemove.call _, newArray, _.equalChecker(elem)
+      newArray
+
+    deleteWhere: (coll, filter, destructive) ->
+      console.warn "The function _.deleteWhere has been deprecated, use _.remove instead."
+      _.remove coll, filter, {destructive, findByAttrs: true}
+
+    arrayDel: ->
+      console.warn "The function _.arrayDel has been deprecated, use _.remove instead."
+      _.remove arguments...
     # ]]]
 
   , {chain: false}
@@ -287,4 +287,3 @@ if module?.exports?
   module.exports = mixer
 else
   mixer window._
-
